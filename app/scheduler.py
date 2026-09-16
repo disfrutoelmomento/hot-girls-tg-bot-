@@ -21,7 +21,12 @@ from app.config import (
 )
 from app.database import SessionLocal
 from app.models import Checkin, DayResult, User, WeeklyPlan
-from app.notify import forward_photos_to_group, send_celebration_extras, send_to_group
+from app.notify import (
+    forward_photos_to_group,
+    send_celebration_extras,
+    send_random_sticker,
+    send_to_group,
+)
 from app.streaks import group_streak, today_msk
 from app.texts import (
     day_closed_failed_text,
@@ -53,6 +58,7 @@ async def send_morning_reminder() -> None:
             entries.append((name, activities))
 
     await send_to_group(morning_reminder_text(entries))
+    await send_random_sticker()
 
 
 async def send_evening_reminder() -> None:
