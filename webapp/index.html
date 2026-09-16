@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Streak Tracker</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div id="app">
+  <div id="loading" class="state-message">Загрузка…</div>
+  <div id="error" class="state-message" hidden></div>
+
+  <main id="content" hidden>
+    <header class="streaks-row">
+      <div class="streak-card streak-personal">
+        <div class="streak-icon" data-icon="flame"></div>
+        <div class="streak-value" id="personal-streak">0</div>
+        <div class="streak-label">Личный стрик</div>
+      </div>
+      <div class="streak-card streak-team">
+        <div class="streak-icon" data-icon="group"></div>
+        <div class="streak-value" id="group-streak">0</div>
+        <div class="streak-label">Командный стрик</div>
+      </div>
+    </header>
+
+    <section class="card">
+      <div class="card-header">
+        <h2>Квест дня</h2>
+        <span class="quest-count" id="quest-count">0 из 3</span>
+      </div>
+      <div class="quest-avatars" id="quest-avatars"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-header">
+        <h2 id="plan-title">План на сегодня</h2>
+      </div>
+      <ul class="plan-list" id="plan-list"></ul>
+    </section>
+
+    <section class="card">
+      <div class="card-header">
+        <h2>Отметки за 90 дней</h2>
+      </div>
+      <div class="calendar-grid" id="calendar-grid"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-header">
+        <h2>Бейджи</h2>
+      </div>
+      <div class="badges-row" id="badges-row"></div>
+    </section>
+  </main>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,35 +1,16 @@
-"""Точка входа. Сейчас запускает бота (polling) и планировщик в одном
-процессе. На шаге с FastAPI этот файл станет запускать всё в одном
-процессе: uvicorn (FastAPI) как хозяина процесса, а polling бота и
-APScheduler — как фоновые asyncio-задачи внутри него."""
+"""Точка входа для локального запуска. На Railway используется тот же
+app.api:app, но напрямую через uvicorn (см. Procfile) — этот файл просто
+удобная обёртка для `python -m app.main` при локальной разработке."""
 
-import asyncio
-import logging
+import os
 
-from aiogram.types import BotCommand
-
-from app.bot import bot, dp
-from app.database import init_db
-from app.scheduler import setup_scheduler
+import uvicorn
 
 
-async def main() -> None:
-    logging.basicConfig(level=logging.INFO)
-    init_db()
-
-    # Список команд для "/"-меню Telegram рядом с полем ввода.
-    await bot.set_my_commands(
-        [
-            BotCommand(command="start", description="Зарегистрироваться / начать"),
-            BotCommand(command="plan", description="Настроить план на неделю"),
-        ]
-    )
-
-    scheduler = setup_scheduler()
-    scheduler.start()
-
-    await dp.start_polling(bot)
+def main() -> None:
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("app.api:app", host="0.0.0.0", port=port)
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
