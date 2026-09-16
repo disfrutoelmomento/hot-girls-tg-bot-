@@ -8,6 +8,7 @@ from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMar
 
 from app.config import WEEKDAY_NAMES_RU, WEEKDAY_SHORT_RU, WHITELIST
 from app.database import SessionLocal
+from app.keyboards import PLAN_BUTTON_TEXT
 from app.models import User, WeeklyPlan
 
 router = Router()
@@ -103,6 +104,7 @@ async def _show_menu(db, user_id: int) -> tuple[str, InlineKeyboardMarkup]:
 
 
 @router.message(Command("plan"))
+@router.message(F.text == PLAN_BUTTON_TEXT)
 async def cmd_plan(message: Message, state: FSMContext) -> None:
     tg_id = message.from_user.id
     if tg_id not in WHITELIST:

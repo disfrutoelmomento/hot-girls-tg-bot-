@@ -21,7 +21,7 @@ from app.config import (
 )
 from app.database import SessionLocal
 from app.models import Checkin, DayResult, User, WeeklyPlan
-from app.notify import forward_photo_to_group, send_to_group
+from app.notify import forward_photos_to_group, send_celebration_extras, send_to_group
 from app.streaks import group_streak, today_msk
 from app.texts import (
     day_closed_failed_text,
@@ -101,20 +101,22 @@ async def close_day() -> None:
         db.commit()
 
         streak_after = None
-        photos: list[tuple[int, str]] = []
-        id_to_name: dict[int, str] = {}
+        photos_with_captions: list[tuple[str, str | None]] = []
         if all_completed:
             streak_after = group_streak(db, as_of=today)
-            photos = [(c.user_id, c.photo_file_id) for c in checkins_today]
+            id_to_name: dict[int, str] = {}
             for tg_id, name in WHITELIST.items():
                 user = db.query(User).filter(User.telegram_id == tg_id).first()
                 if user is not None:
                     id_to_name[user.id] = name
+            photos_with_captions = [
+                (c.photo_file_id, id_to_name.get(c.user_id)) for c in checkins_today
+            ]
 
     if all_completed:
         await send_to_group(day_closed_success_text(streak_after))
-        for user_id, file_id in photos:
-            await forward_photo_to_group(file_id, caption=id_to_name.get(user_id))
+        await forward_photos_to_group(photos_with_captions)
+        await send_celebration_extras()
     else:
         await send_to_group(day_closed_failed_text(previous_streak))
 

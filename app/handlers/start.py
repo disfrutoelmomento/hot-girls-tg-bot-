@@ -1,9 +1,10 @@
 from aiogram import F, Router
 from aiogram.filters import CommandStart
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message, WebAppInfo
+from aiogram.types import Message
 
-from app.config import WEBAPP_URL, WHITELIST
+from app.config import WHITELIST
 from app.database import SessionLocal
+from app.keyboards import main_menu_keyboard
 from app.models import User
 
 router = Router()
@@ -38,16 +39,7 @@ async def cmd_start(message: Message) -> None:
         f"{greeting}\n\n"
         "Как это работает:\n"
         "— Пришли сюда фото после тренировки — оно закроет день и продлит твой стрик.\n"
-        "— /plan — настроить план активностей на каждый день недели.\n"
-        "— Кнопка ниже открывает трекер со стриками, квестом дня и бейджами."
+        "— Кнопки внизу — настроить план на неделю и открыть трекер."
     )
 
-    kb = None
-    if WEBAPP_URL:
-        kb = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [InlineKeyboardButton(text="Открыть трекер", web_app=WebAppInfo(url=WEBAPP_URL))]
-            ]
-        )
-
-    await message.answer(text, reply_markup=kb)
+    await message.answer(text, reply_markup=main_menu_keyboard())

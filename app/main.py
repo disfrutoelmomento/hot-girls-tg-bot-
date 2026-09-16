@@ -6,6 +6,8 @@ APScheduler — как фоновые asyncio-задачи внутри него
 import asyncio
 import logging
 
+from aiogram.types import BotCommand
+
 from app.bot import bot, dp
 from app.database import init_db
 from app.scheduler import setup_scheduler
@@ -14,6 +16,14 @@ from app.scheduler import setup_scheduler
 async def main() -> None:
     logging.basicConfig(level=logging.INFO)
     init_db()
+
+    # Список команд для "/"-меню Telegram рядом с полем ввода.
+    await bot.set_my_commands(
+        [
+            BotCommand(command="start", description="Зарегистрироваться / начать"),
+            BotCommand(command="plan", description="Настроить план на неделю"),
+        ]
+    )
 
     scheduler = setup_scheduler()
     scheduler.start()
