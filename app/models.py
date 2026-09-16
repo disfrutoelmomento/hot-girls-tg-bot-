@@ -74,6 +74,21 @@ class Badge(Base):
     user: Mapped["User"] = relationship(back_populates="badges")
 
 
+class Sticker(Base):
+    """Стикер, присланный любой из участниц боту в личку — автоматически
+    попадает в общую копилку для радостных уведомлений (бейдж, удачный
+    день). UNIQUE на file_id защищает от дублей, если один и тот же стикер
+    пришлют дважды (в том числе от разных участниц)."""
+
+    __tablename__ = "stickers"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    file_id: Mapped[str] = mapped_column(unique=True)
+    emoji: Mapped[str | None]
+    added_by_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    added_at: Mapped[str] = mapped_column(default=_now_iso)
+
+
 class DayResult(Base):
     """Итог дня, который проставляет планировщик в 23:59. Нужен не для
     расчёта стрика (его мы считаем на лету из checkins), а чтобы:

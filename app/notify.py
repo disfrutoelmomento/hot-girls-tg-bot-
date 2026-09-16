@@ -8,7 +8,9 @@ from aiogram.types import FSInputFile, InputMediaPhoto
 
 from app.bot_instance import bot
 from app.config import GROUP_CHAT_ID, MOTIVATION_IMAGES_DIR
-from app.texts import BADGE_STICKERS, DAY_SUCCESS_STICKERS, badge_awarded_text
+from app.database import SessionLocal
+from app.models import Sticker
+from app.texts import badge_awarded_text
 
 
 async def send_to_group(text: str) -> None:
@@ -24,10 +26,14 @@ async def forward_photos_to_group(photos: list[tuple[str, str | None]]) -> None:
     await bot.send_media_group(GROUP_CHAT_ID, media=media)
 
 
-async def _send_random_sticker(sticker_ids: list[str]) -> None:
-    if not sticker_ids:
-        return  # список пуст, пока не добавили стикеры (см. app/texts.py)
-    await bot.send_sticker(GROUP_CHAT_ID, random.choice(sticker_ids))
+async def _send_random_sticker() -> None:
+    """Стикеры копятся в БД сами — любая участница просто шлёт стикер боту
+    в личку (см. app/handlers/sticker.py). Пока копилка пуста — no-op."""
+    with SessionLocal() as db:
+        file_ids = [row[0] for row in db.query(Sticker.file_id).all()]
+    if not file_ids:
+        return
+    await bot.send_sticker(GROUP_CHAT_ID, random.choice(file_ids))
 
 
 async def _send_random_motivation_image() -> None:
@@ -41,12 +47,12 @@ async def _send_random_motivation_image() -> None:
 
 async def notify_badge_awarded(name: str, threshold: int) -> None:
     await send_to_group(badge_awarded_text(name, threshold))
-    await _send_random_sticker(BADGE_STICKERS)
+    await _send_random_sticker()
 
 
 async def send_celebration_extras() -> None:
-    """Опциональный стикер + мотивационная картинка после удачного закрытия
-    дня. Оба источника пусты по умолчанию, так что пока ничего не отправят —
-    это безопасно, пока контент не добавлен."""
-    await _send_random_sticker(DAY_SUCCESS_STICKERS)
+    """Опциональный стикер (из общей копилки в БД) + мотивационная картинка
+    после удачного закрытия дня. Пока ничего не добавлено — оба шага
+    безопасный no-op."""
+    await _send_random_sticker()
     await _send_random_motivation_image()
