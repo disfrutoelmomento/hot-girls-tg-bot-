@@ -4,7 +4,7 @@ from aiogram.types import Message
 
 from app.config import WHITELIST
 from app.database import SessionLocal
-from app.keyboards import main_menu_keyboard
+from app.keyboards import main_menu_keyboard, tracker_inline_keyboard
 from app.models import User
 
 router = Router()
@@ -39,7 +39,12 @@ async def cmd_start(message: Message) -> None:
         f"{greeting}\n\n"
         "Как это работает:\n"
         "— Пришли сюда фото после тренировки — оно закроет день и продлит твой стрик.\n"
-        "— Кнопки внизу — настроить план на неделю и открыть трекер."
+        "— Кнопка внизу — настроить план на неделю.\n"
+        "— Трекер со стриками, квестом дня и календарём — кнопкой ниже."
     )
 
     await message.answer(text, reply_markup=main_menu_keyboard())
+
+    tracker_kb = tracker_inline_keyboard()
+    if tracker_kb:
+        await message.answer("Открыть трекер:", reply_markup=tracker_kb)
