@@ -7,13 +7,14 @@ import asyncio
 import logging
 from contextlib import asynccontextmanager
 
-from aiogram.types import BotCommand, MenuButtonDefault
+from aiogram.types import BotCommand, MenuButtonWebApp, WebAppInfo
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.staticfiles import StaticFiles
 
 from app.bot import bot, dp
-from app.config import BASE_DIR, STREAK_BADGE_THRESHOLDS, WEEKDAY_NAMES_RU, WHITELIST
+from app.config import BASE_DIR, STREAK_BADGE_THRESHOLDS, WEBAPP_URL, WEEKDAY_NAMES_RU, WHITELIST
 from app.database import SessionLocal, init_db
+from app.keyboards import WEBAPP_BUTTON_TEXT
 from app.models import Badge, Checkin, User, WeeklyPlan
 from app.scheduler import setup_scheduler
 from app.streaks import calendar_days, group_streak, personal_streak, today_msk, today_quest_status
@@ -33,11 +34,13 @@ async def lifespan(app: FastAPI):
             BotCommand(command="plan", description="Настроить план на неделю"),
         ]
     )
-    # Раньше трекер открывался через Menu Button (иконка рядом с полем
-    # ввода) — Telegram хранит этот выбор на своей стороне, поэтому явно
-    # возвращаем стандартную иконку. Теперь трекер — inline-кнопка под
-    # приветствием /start (см. app/handlers/start.py).
-    await bot.set_chat_menu_button(menu_button=MenuButtonDefault())
+    if WEBAPP_URL:
+        # Menu Button (иконка рядом с полем ввода) — единственный способ
+        # открыть Mini App в один тап и с рабочим initData: у кнопки на
+        # ReplyKeyboardMarkup initData нет (см. app/keyboards.py).
+        await bot.set_chat_menu_button(
+            menu_button=MenuButtonWebApp(text=WEBAPP_BUTTON_TEXT, web_app=WebAppInfo(url=WEBAPP_URL))
+        )
 
     scheduler = setup_scheduler()
     scheduler.start()

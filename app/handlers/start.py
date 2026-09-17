@@ -4,7 +4,7 @@ from aiogram.types import Message
 
 from app.config import WHITELIST
 from app.database import SessionLocal
-from app.keyboards import WEBAPP_BUTTON_TEXT, main_menu_keyboard, tracker_inline_keyboard
+from app.keyboards import main_menu_keyboard
 from app.models import User
 
 router = Router()
@@ -39,20 +39,8 @@ async def cmd_start(message: Message) -> None:
         f"{greeting}\n\n"
         "Как это работает:\n"
         "— Пришли сюда фото после тренировки — оно закроет день и продлит твой стрик.\n"
-        "— Кнопки внизу — настроить план на неделю и открыть трекер."
+        "— Кнопка внизу — настроить план на неделю.\n"
+        "— Трекер со стриками, квестом дня и календарём — кнопка рядом с полем ввода."
     )
 
     await message.answer(text, reply_markup=main_menu_keyboard())
-
-
-@router.message(F.text == WEBAPP_BUTTON_TEXT)
-async def open_tracker(message: Message) -> None:
-    # У кнопки на обычной (reply) клавиатуре нет initData — только у
-    # inline-кнопки или Menu Button (см. app/keyboards.py). Поэтому сама
-    # reply-кнопка не открывает Mini App напрямую, а присылает inline-кнопку,
-    # которая уже открывает трекер с рабочей авторизацией.
-    tracker_kb = tracker_inline_keyboard()
-    if tracker_kb is None:
-        await message.answer("Трекер пока не настроен.")
-        return
-    await message.answer("Трекер:", reply_markup=tracker_kb)
