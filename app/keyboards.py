@@ -1,16 +1,16 @@
 """Постоянная клавиатура-меню внизу чата — чтобы не нужно было помнить и
-печатать команды. Показывается после /start."""
+печатать команды. Показывается после /start.
 
-from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, WebAppInfo
+Кнопка трекера сюда специально не добавляется: у обычной кнопки на
+custom-клавиатуре (в отличие от inline-кнопки или Menu Button) нет
+initData, поэтому Mini App не смог бы авторизовать пользователя. Вместо
+этого трекер открывается через кнопку-меню (см. app/api.py, lifespan)."""
 
-from app.config import WEBAPP_URL
+from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 
 PLAN_BUTTON_TEXT = "План на неделю"
 WEBAPP_BUTTON_TEXT = "Открыть трекер"
 
 
 def main_menu_keyboard() -> ReplyKeyboardMarkup:
-    row = [KeyboardButton(text=PLAN_BUTTON_TEXT)]
-    if WEBAPP_URL:
-        row.append(KeyboardButton(text=WEBAPP_BUTTON_TEXT, web_app=WebAppInfo(url=WEBAPP_URL)))
-    return ReplyKeyboardMarkup(keyboard=[row], resize_keyboard=True)
+    return ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text=PLAN_BUTTON_TEXT)]], resize_keyboard=True)

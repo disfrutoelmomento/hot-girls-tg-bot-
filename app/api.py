@@ -7,13 +7,14 @@ import asyncio
 import logging
 from contextlib import asynccontextmanager
 
-from aiogram.types import BotCommand
+from aiogram.types import BotCommand, MenuButtonWebApp, WebAppInfo
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.staticfiles import StaticFiles
 
 from app.bot import bot, dp
-from app.config import BASE_DIR, STREAK_BADGE_THRESHOLDS, WEEKDAY_NAMES_RU, WHITELIST
+from app.config import BASE_DIR, STREAK_BADGE_THRESHOLDS, WEBAPP_URL, WEEKDAY_NAMES_RU, WHITELIST
 from app.database import SessionLocal, init_db
+from app.keyboards import WEBAPP_BUTTON_TEXT
 from app.models import Badge, Checkin, User, WeeklyPlan
 from app.scheduler import setup_scheduler
 from app.streaks import calendar_days, group_streak, personal_streak, today_msk, today_quest_status
@@ -33,6 +34,16 @@ async def lifespan(app: FastAPI):
             BotCommand(command="plan", description="Настроить план на неделю"),
         ]
     )
+
+    if WEBAPP_URL:
+        # Кнопка-меню (рядом с полем ввода) — в отличие от обычной кнопки на
+        # reply-клавиатуре, при запуске через неё Mini App получает initData
+        # (см. https://core.telegram.org/bots/webapps): initData доступен
+        # только через inline-кнопку или Menu Button, а через кнопку на
+        # custom keyboard — только sendData, initData всегда пустой.
+        await bot.set_chat_menu_button(
+            menu_button=MenuButtonWebApp(text=WEBAPP_BUTTON_TEXT, web_app=WebAppInfo(url=WEBAPP_URL))
+        )
 
     scheduler = setup_scheduler()
     scheduler.start()
