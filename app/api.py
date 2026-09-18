@@ -139,11 +139,13 @@ async def get_dashboard(x_telegram_init_data: str = Header(...)) -> dict:
         next_threshold = next(
             (t for t in STREAK_BADGE_THRESHOLDS if t not in earned_thresholds), None
         )
-        # Календарь начинается с 1-го числа месяца регистрации и растёт
-        # вправо по мере времени (сентябрь → октябрь → ...), а не тянет
-        # почти 3 месяца пустых клеток до того, как бот вообще существовал.
+        # Сетка календаря всегда на всю ширину (много клеток, как задумано),
+        # но подписывать месяцем клетки до регистрации не нужно — бот тогда
+        # ещё не существовал. tracking_since — 1-е число месяца регистрации,
+        # webapp/app.js:renderCalendar использует это, чтобы не рисовать
+        # подписи "Jun"/"Jul"/"Aug" над пустыми клетками "до бота".
         registered_date = datetime.fromisoformat(user.created_at).astimezone(TIMEZONE).date()
-        calendar_since = registered_date.replace(day=1)
+        tracking_since = registered_date.replace(day=1).isoformat()
 
         return {
             "name": user.name,
@@ -165,7 +167,8 @@ async def get_dashboard(x_telegram_init_data: str = Header(...)) -> dict:
                 "activities": [item.activity_label for item in plan_items],
                 "completed": checked_in_today,
             },
-            "calendar": calendar_days(db, user.id, days=90, since=calendar_since),
+            "calendar": calendar_days(db, user.id, days=90),
+            "tracking_since": tracking_since,
             "badges": [
                 {"threshold": t, "unlocked": t in earned_thresholds}
                 for t in STREAK_BADGE_THRESHOLDS
