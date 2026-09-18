@@ -162,7 +162,7 @@ function renderPlan(planToday) {
 
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-function renderCalendar(days) {
+function renderCalendar(days, trackingSince) {
   const grid = document.getElementById("calendar-grid");
   const monthsRow = document.getElementById("calendar-months");
   grid.innerHTML = "";
@@ -183,7 +183,9 @@ function renderCalendar(days) {
 
   padded.forEach((day, i) => {
     const dow = i % 7;
-    if (day) {
+    // Не подписываем месяцем клетки до tracking_since (месяц регистрации) —
+    // бот тогда ещё не существовал, подпись "Jun"/"Jul" только запутает.
+    if (day && (!trackingSince || day.date >= trackingSince)) {
       const d = new Date(day.date);
       if (dow === 0 || !labeledFirstDay) {
         if (d.getMonth() !== lastMonth) {
@@ -280,7 +282,7 @@ function render(data) {
   renderGroupAvatars(data.quest_today.participants);
   renderQuest(data.quest_today);
   renderPlan(data.plan_today);
-  renderCalendar(data.calendar);
+  renderCalendar(data.calendar, data.tracking_since);
   renderBadges(data.badges, data.next_badge);
 
   document.getElementById("loading").hidden = true;
