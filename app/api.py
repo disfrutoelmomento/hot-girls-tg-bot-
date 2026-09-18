@@ -5,14 +5,22 @@
 
 import asyncio
 import logging
+import time
 from contextlib import asynccontextmanager
 
 from aiogram.types import BotCommand, MenuButtonWebApp, WebAppInfo
-from fastapi import FastAPI, Header, HTTPException
+from fastapi import FastAPI, Header, HTTPException, Response
 from fastapi.staticfiles import StaticFiles
 
 from app.bot import bot, dp
-from app.config import BASE_DIR, STREAK_BADGE_THRESHOLDS, WEBAPP_URL, WEEKDAY_NAMES_RU, WHITELIST
+from app.config import (
+    BASE_DIR,
+    STREAK_BADGE_THRESHOLDS,
+    WEBAPP_URL,
+    WEEKDAY_NAMES_EN,
+    WHITELIST,
+    theme_for_name,
+)
 from app.database import SessionLocal, init_db
 from app.keyboards import WEBAPP_BUTTON_TEXT
 from app.models import Badge, Checkin, User, WeeklyPlan
@@ -21,6 +29,11 @@ from app.streaks import calendar_days, group_streak, personal_streak, today_msk,
 from app.telegram_auth import validate_init_data
 
 logger = logging.getLogger(__name__)
+
+# tg_id -> (jpeg bytes, expires_at). Профильные фото меняются редко —
+# час кэша избавляет от лишних походов в Telegram API на каждый визит в Mini App.
+_AVATAR_CACHE: dict[int, tuple[bytes, float]] = {}
+_AVATAR_CACHE_TTL = 3600
 
 
 @asynccontextmanager
@@ -56,6 +69,26 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 
+@app.get("/api/avatar/{tg_id}")
+async def get_avatar(tg_id: int) -> Response:
+    if tg_id not in WHITELIST:
+        raise HTTPException(status_code=404)
+
+    cached = _AVATAR_CACHE.get(tg_id)
+    if cached and cached[1] > time.monotonic():
+        return Response(content=cached[0], media_type="image/jpeg")
+
+    photos = await bot.get_user_profile_photos(tg_id, limit=1)
+    if photos.total_count == 0:
+        raise HTTPException(status_code=404)
+
+    file = await bot.get_file(photos.photos[0][-1].file_id)
+    buf = await bot.download_file(file.file_path)
+    content = buf.read()
+    _AVATAR_CACHE[tg_id] = (content, time.monotonic() + _AVATAR_CACHE_TTL)
+    return Response(content=content, media_type="image/jpeg")
+
+
 @app.get("/api/dashboard")
 async def get_dashboard(x_telegram_init_data: str = Header(...)) -> dict:
     tg_user = validate_init_data(x_telegram_init_data)
@@ -79,7 +112,12 @@ async def get_dashboard(x_telegram_init_data: str = Header(...)) -> dict:
 
         quest_status = today_quest_status(db, today)
         participants = [
-            {"telegram_id": whitelist_tg_id, "name": name, "checked_in_today": quest_status.get(whitelist_tg_id, False)}
+            {
+                "telegram_id": whitelist_tg_id,
+                "name": name,
+                "theme": theme_for_name(name),
+                "checked_in_today": quest_status.get(whitelist_tg_id, False),
+            }
             for whitelist_tg_id, name in WHITELIST.items()
         ]
 
@@ -95,17 +133,28 @@ async def get_dashboard(x_telegram_init_data: str = Header(...)) -> dict:
             b.threshold for b in db.query(Badge).filter(Badge.user_id == user.id).all()
         }
 
+        streak = personal_streak(db, user.id, as_of=today)
+        next_threshold = next(
+            (t for t in STREAK_BADGE_THRESHOLDS if t not in earned_thresholds), None
+        )
+
         return {
             "name": user.name,
-            "personal_streak": personal_streak(db, user.id, as_of=today),
+            "theme": theme_for_name(user.name),
+            "personal_streak": streak,
             "group_streak": group_streak(db, as_of=today),
+            "next_badge": (
+                {"threshold": next_threshold, "days_left": max(next_threshold - streak, 0)}
+                if next_threshold is not None
+                else None
+            ),
             "quest_today": {
                 "participants": participants,
                 "completed_count": sum(1 for p in participants if p["checked_in_today"]),
                 "total": len(participants),
             },
             "plan_today": {
-                "day_name": WEEKDAY_NAMES_RU[weekday],
+                "day_name": WEEKDAY_NAMES_EN[weekday],
                 "activities": [item.activity_label for item in plan_items],
                 "completed": checked_in_today,
             },

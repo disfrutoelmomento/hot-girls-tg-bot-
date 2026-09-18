@@ -37,7 +37,24 @@ TIMEZONE = ZoneInfo("Europe/Moscow")
 DB_PATH = os.environ.get("DB_PATH", str(BASE_DIR / "data" / "habit.db"))
 WEBAPP_URL = os.environ.get("WEBAPP_URL", "")
 
-STREAK_BADGE_THRESHOLDS = [3, 7, 14, 30]
+STREAK_BADGE_THRESHOLDS = [3, 7, 14, 30, 60]
+
+# Имя участницы -> цветовая тема Mini App (см. webapp/style.css). Сравнение
+# без учёта регистра, чтобы работали и кириллица, и латиница на случай смены
+# написания имени в WHITELIST_USERS.
+THEME_BY_NAME = {
+    "алтана": "altana",
+    "altana": "altana",
+    "эля": "elya",
+    "elya": "elya",
+    "маша": "masha",
+    "masha": "masha",
+}
+DEFAULT_THEME = "altana"
+
+
+def theme_for_name(name: str) -> str:
+    return THEME_BY_NAME.get(name.strip().lower(), DEFAULT_THEME)
 
 MORNING_REMINDER_HOUR = int(os.environ.get("MORNING_REMINDER_HOUR", 9))
 EVENING_REMINDER_HOUR = int(os.environ.get("EVENING_REMINDER_HOUR", 21))
@@ -45,6 +62,9 @@ DAY_CLOSE_HOUR = 23
 DAY_CLOSE_MINUTE = 59
 
 WEEKDAY_NAMES_RU = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"]
+# Mini App теперь на английском (бот в чате остаётся на русском), поэтому для
+# /api/dashboard нужны свои подписи дней недели.
+WEEKDAY_NAMES_EN = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 WEEKDAY_SHORT_RU = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
 
 # Папка для мотивационных картинок, которые бот иногда шлёт в группу при

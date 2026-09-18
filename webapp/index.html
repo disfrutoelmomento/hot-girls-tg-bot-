@@ -1,56 +1,91 @@
 <!doctype html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>Streak Tracker</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Playfair+Display:ital,wght@0,700..900;1,700..900&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 <div id="app">
-  <div id="loading" class="state-message">Загрузка…</div>
+  <div id="loading" class="state-message">Loading…</div>
   <div id="error" class="state-message" hidden></div>
 
   <main id="content" hidden>
-    <header class="streaks-row">
-      <div class="streak-card streak-personal">
-        <div class="streak-icon" data-icon="flame"></div>
-        <div class="streak-value" id="personal-streak">0</div>
-        <div class="streak-label">Личный стрик</div>
-      </div>
-      <div class="streak-card streak-team">
-        <div class="streak-icon" data-icon="group"></div>
-        <div class="streak-value" id="group-streak">0</div>
-        <div class="streak-label">Командный стрик</div>
+    <header class="topbar">
+      <div class="hello">
+        <div class="hello-emoji">👋</div>
+        <div>
+          <div class="hello-name" id="hello-name">Hi!</div>
+          <div class="hello-date" id="hello-date"></div>
+        </div>
       </div>
     </header>
 
+    <section class="hero">
+      <div class="hero-glow"></div>
+      <div class="hero-flame">
+        <svg viewBox="0 0 24 24">
+          <defs>
+            <linearGradient id="flameGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" style="stop-color: var(--flame-1)"/>
+              <stop offset="55%" style="stop-color: var(--accent)"/>
+              <stop offset="100%" style="stop-color: var(--accent-2)"/>
+            </linearGradient>
+          </defs>
+          <path fill="url(#flameGrad)" d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+        </svg>
+      </div>
+      <div class="hero-value" id="hero-value">0</div>
+      <div class="hero-label">day streak</div>
+
+      <div class="hero-progress" id="hero-progress" hidden>
+        <div class="hero-progress-bar"><div class="hero-progress-fill" id="hero-progress-fill" style="width: 0%"></div></div>
+        <div class="hero-progress-text" id="hero-progress-text"></div>
+      </div>
+    </section>
+
+    <div class="group-banner">
+      <div class="group-avatars" id="group-avatars"></div>
+      <svg class="group-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <div class="group-text">
+        <span class="group-value" id="group-value">0</span>
+        <span class="group-label">days together — the three of us combined</span>
+      </div>
+    </div>
+
     <section class="card">
       <div class="card-header">
-        <h2>Квест дня</h2>
-        <span class="quest-count" id="quest-count">0 из 3</span>
+        <h2>Today's Quest</h2>
+        <span class="quest-count" id="quest-count">0 of 3</span>
       </div>
       <div class="quest-avatars" id="quest-avatars"></div>
     </section>
 
     <section class="card">
       <div class="card-header">
-        <h2 id="plan-title">План на сегодня</h2>
+        <h2 id="plan-title">Today's Plan</h2>
       </div>
       <ul class="plan-list" id="plan-list"></ul>
     </section>
 
     <section class="card">
       <div class="card-header">
-        <h2>Отметки за 90 дней</h2>
+        <h2>90-Day Check-ins</h2>
       </div>
-      <div class="calendar-grid" id="calendar-grid"></div>
+      <div class="calendar-wrap">
+        <div class="calendar-months" id="calendar-months"></div>
+        <div class="calendar-grid" id="calendar-grid"></div>
+      </div>
     </section>
 
     <section class="card">
       <div class="card-header">
-        <h2>Бейджи</h2>
+        <h2>Badges</h2>
       </div>
       <div class="badges-row" id="badges-row"></div>
     </section>

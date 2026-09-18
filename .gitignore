@@ -1,4 +1,5 @@
 .env
+assets/friends/
 data/*.db
 data/*.db-journal
 __pycache__/
