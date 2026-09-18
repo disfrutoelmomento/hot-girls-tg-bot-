@@ -139,7 +139,13 @@ async def get_dashboard(x_telegram_init_data: str = Header(...)) -> dict:
         next_threshold = next(
             (t for t in STREAK_BADGE_THRESHOLDS if t not in earned_thresholds), None
         )
+        # Начало календаря — с 1-го числа месяца регистрации, а не с
+        # точного дня: иначе сразу после /start сетка почти пустая
+        # (пара клеток вместо привычного heatmap-поля). Пустые клетки за
+        # этот месяц до регистрации — это нормально, а вот тянуть месяцы
+        # до того, как бот вообще существовал, не нужно (see calendar_days).
         registered_date = datetime.fromisoformat(user.created_at).astimezone(TIMEZONE).date()
+        calendar_since = registered_date.replace(day=1)
 
         return {
             "name": user.name,
@@ -161,7 +167,7 @@ async def get_dashboard(x_telegram_init_data: str = Header(...)) -> dict:
                 "activities": [item.activity_label for item in plan_items],
                 "completed": checked_in_today,
             },
-            "calendar": calendar_days(db, user.id, days=90, since=registered_date),
+            "calendar": calendar_days(db, user.id, days=90, since=calendar_since),
             "badges": [
                 {"threshold": t, "unlocked": t in earned_thresholds}
                 for t in STREAK_BADGE_THRESHOLDS
