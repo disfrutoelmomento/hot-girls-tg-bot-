@@ -83,13 +83,21 @@ def today_quest_status(db: Session, on_date: date | None = None) -> dict[int, bo
     return result
 
 
-def calendar_days(db: Session, user_id: int, days: int = 90) -> list[dict]:
-    """Список последних `days` дней с флагом, была ли отметка — для
-    календаря-сетки в Mini App (по типу GitHub contributions)."""
+def calendar_days(db: Session, user_id: int, days: int = 90, since: date | None = None) -> list[dict]:
+    """Список дней с флагом, была ли отметка — для календаря-сетки в Mini
+    App (по типу GitHub contributions). Обычно это последние `days` дней,
+    но если участница зарегистрировалась позже этого окна, начинаем прямо
+    с даты регистрации — не тянуть же пустые месяцы до того, как бот вообще
+    существовал."""
     dates = _checkin_dates(db, user_id)
     end = today_msk()
+    start = end - timedelta(days=days - 1)
+    if since and since > start:
+        start = since
+
     result = []
-    for i in range(days - 1, -1, -1):
-        d = end - timedelta(days=i)
+    d = start
+    while d <= end:
         result.append({"date": d.isoformat(), "checked": d.isoformat() in dates})
+        d += timedelta(days=1)
     return result

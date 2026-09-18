@@ -7,6 +7,7 @@ import asyncio
 import logging
 import time
 from contextlib import asynccontextmanager
+from datetime import datetime
 
 from aiogram.types import BotCommand, MenuButtonWebApp, WebAppInfo
 from fastapi import FastAPI, Header, HTTPException, Response
@@ -16,6 +17,7 @@ from app.bot import bot, dp
 from app.config import (
     BASE_DIR,
     STREAK_BADGE_THRESHOLDS,
+    TIMEZONE,
     WEBAPP_URL,
     WEEKDAY_NAMES_EN,
     WHITELIST,
@@ -137,6 +139,7 @@ async def get_dashboard(x_telegram_init_data: str = Header(...)) -> dict:
         next_threshold = next(
             (t for t in STREAK_BADGE_THRESHOLDS if t not in earned_thresholds), None
         )
+        registered_date = datetime.fromisoformat(user.created_at).astimezone(TIMEZONE).date()
 
         return {
             "name": user.name,
@@ -158,7 +161,7 @@ async def get_dashboard(x_telegram_init_data: str = Header(...)) -> dict:
                 "activities": [item.activity_label for item in plan_items],
                 "completed": checked_in_today,
             },
-            "calendar": calendar_days(db, user.id, days=90),
+            "calendar": calendar_days(db, user.id, days=90, since=registered_date),
             "badges": [
                 {"threshold": t, "unlocked": t in earned_thresholds}
                 for t in STREAK_BADGE_THRESHOLDS

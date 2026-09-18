@@ -178,17 +178,19 @@ function renderCalendar(days) {
 
   let week = 0;
   let lastMonth = -1;
+  let labeledFirstDay = false;
   const monthLabels = [];
 
   padded.forEach((day, i) => {
     const dow = i % 7;
     if (day) {
       const d = new Date(day.date);
-      if (dow === 0 || i === 0) {
+      if (dow === 0 || !labeledFirstDay) {
         if (d.getMonth() !== lastMonth) {
           monthLabels.push({ week, label: MONTH_NAMES[d.getMonth()] });
           lastMonth = d.getMonth();
         }
+        labeledFirstDay = true;
       }
     }
 
