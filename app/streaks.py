@@ -83,20 +83,17 @@ def today_quest_status(db: Session, on_date: date | None = None) -> dict[int, bo
     return result
 
 
-def calendar_days(db: Session, user_id: int, days: int = 90) -> list[dict]:
-    """Список последних `days` дней с флагом, была ли отметка — для
-    календаря-сетки в Mini App (по типу GitHub contributions). Сетка всегда
-    фиксированной ширины (много клеток), даже если реальных отметок пока
-    мало — пустые клетки за месяцы до регистрации это нормально, а вот
-    подписывать их названием месяца не стоит (см. tracking_since в
-    app/api.py и app.js:renderCalendar)."""
+def calendar_days(db: Session, user_id: int, start: date, days: int = 90) -> list[dict]:
+    """Список из `days` дней НАЧИНАЯ с `start` (обычно 1-е число месяца
+    регистрации) — календарь-сетка в Mini App идёт вперёд по времени
+    (сентябрь → октябрь → ноябрь → ...), а не назад от сегодня. Дни в
+    будущем просто пока не отмечены — checked станет True сама, когда до
+    них дойдёт дело."""
     dates = _checkin_dates(db, user_id)
-    end = today_msk()
-    start = end - timedelta(days=days - 1)
 
     result = []
     d = start
-    while d <= end:
+    for _ in range(days):
         result.append({"date": d.isoformat(), "checked": d.isoformat() in dates})
         d += timedelta(days=1)
     return result

@@ -162,13 +162,11 @@ function renderPlan(planToday) {
 
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-function renderCalendar(days, trackingSince) {
+function renderCalendar(days, todayIso) {
   const grid = document.getElementById("calendar-grid");
   const monthsRow = document.getElementById("calendar-months");
   grid.innerHTML = "";
   monthsRow.innerHTML = "";
-
-  const todayIso = days.length ? days[days.length - 1].date : null;
 
   // Выравниваем по понедельникам, как в GitHub-heatmap: первая неделя может
   // содержать дни ДО начала диапазона — их просто оставляем пустыми ячейками.
@@ -183,9 +181,7 @@ function renderCalendar(days, trackingSince) {
 
   padded.forEach((day, i) => {
     const dow = i % 7;
-    // Не подписываем месяцем клетки до tracking_since (месяц регистрации) —
-    // бот тогда ещё не существовал, подпись "Jun"/"Jul" только запутает.
-    if (day && (!trackingSince || day.date >= trackingSince)) {
+    if (day) {
       const d = new Date(day.date);
       if (dow === 0 || !labeledFirstDay) {
         if (d.getMonth() !== lastMonth) {
@@ -282,7 +278,7 @@ function render(data) {
   renderGroupAvatars(data.quest_today.participants);
   renderQuest(data.quest_today);
   renderPlan(data.plan_today);
-  renderCalendar(data.calendar, data.tracking_since);
+  renderCalendar(data.calendar, data.today);
   renderBadges(data.badges, data.next_badge);
 
   document.getElementById("loading").hidden = true;
